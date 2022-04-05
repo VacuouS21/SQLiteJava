@@ -8,34 +8,34 @@ import java.util.*;
 
 public class WellService {
 
-    private static final String CON_STR = "jdbc:sqlite:C:/Users/VacuouS/IdeaProjects/SQLiteJava/src/main/resources/well.db";
-
     // Используем шаблон одиночка, чтобы не плодить множество
     // экземпляров класса DbHandler
     private static WellService instance = null;
 
-    public static synchronized WellService getInstance() throws SQLException {
+    public static synchronized WellService getInstance(String pathSQLDatabase)  {
         if (instance == null)
-            instance = new WellService();
+            instance = new WellService(pathSQLDatabase);
         return instance;
     }
 
     // Объект, в котором будет храниться соединение с БД
     private Connection connection;
 
-    private WellService() throws SQLException {
-        // Регистрируем драйвер, с которым будем работать
-        // в нашем случае Sqlite
-        DriverManager.registerDriver(new JDBC());
-        // Выполняем подключение к базе данных
-        this.connection = DriverManager.getConnection(CON_STR);
+    private WellService(String pathSQLDatabase)  {
+
+        try {
+            DriverManager.registerDriver(new JDBC());
+            this.connection = DriverManager.getConnection(pathSQLDatabase);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
     }
     public void addEquipmentForWell(String wellName) {}
-    public List<Well> getAllWell(){
-        return null;
-    }
-    public void createWell(String wellName) throws ClassNotFoundException, SQLException {
 
+
+
+    public void createWell(String wellName) {
         String sql = "INSERT INTO 'well'  VALUES (null, (?))";
         try (final PreparedStatement statement =
                      //сюда передаете sql запрос:
