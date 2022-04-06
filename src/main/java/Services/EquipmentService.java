@@ -1,35 +1,30 @@
 package Services;
 
-import Entity.Equipment;
-import Entity.Well;
+import Utility.ForCheckWellWithName;
+import Utility.NameForEquipment;
 import org.sqlite.JDBC;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.util.List;
+import java.sql.*;
 
 public class EquipmentService {
 
+    //Количество оборудования для всех скважин, для уникальных имён.
+    private static int countAllEquipment = 0;
 
-
-    // Используем шаблон одиночка, чтобы не плодить множество
-    // экземпляров класса DbHandler
+    //Singletone
     private static EquipmentService instance = null;
-
-    public static synchronized EquipmentService getInstance(String pathSQLDatabase)  {
+    public static synchronized EquipmentService getInstance(String pathSQLDatabase) {
         if (instance == null)
             instance = new EquipmentService(pathSQLDatabase);
         return instance;
     }
 
-    // Объект, в котором будет храниться соединение с БД
+
+
     private Connection connection;
 
+    //Работа с бд
     private EquipmentService(String pathSQLDatabase) {
-        // Регистрируем драйвер, с которым будем работать
-        // в нашем случае Sqlite
         try {
             DriverManager.registerDriver(new JDBC());
             this.connection = DriverManager.getConnection(pathSQLDatabase);
@@ -37,36 +32,91 @@ public class EquipmentService {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        // Выполняем подключение к базе данных
-
     }
-    public void createEquipment(String wellName,int countEquipment){
 
-        //Проверка на существование такой скважины
+    //Создание n оборудования для скважины wellName
+    public void createEquipment(String wellName, int countClientEquipment) {
 
-
-        for(int i=0;i<countEquipment;i++){
-
-            //Генерируем имя.
-
-            //Создаём оборудование.
-
-
-        }
-
-    }
-    public void countEquipment(String wellName){
-        String sql ="SELECT count() FROM equipment JOIN well w on w.id = equipment.well_id WHERE w.name=(?);";
+        //TODO Проверка на существование такой скважины
         try {
-            PreparedStatement statement =connection.prepareStatement(sql);
-            statement.setString(1, wellName);
-
-            //Выполняете сам запрос в базу.
-            System.out.println("Кол-во оборудования на скважине "+wellName+": "+statement.executeQuery().getInt(1));
+            //Создаём well с заданным wellName, если такой ещё нет
+            if(!ForCheckWellWithName.isForCheckWell(wellName,connection).getBoolean(1)) {
+                ForCheckWellWithName.createWell(wellName,connection);
+            }
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        //сюда передаете sql запрос:
+        //
 
+        //Получение общего количества оборудования, для уникального имени.
+        numCountAllEquipment();
+
+        //Нахождение id скважины поеё имени, для дальнейшей записи в well_id у equipment
+        int idWellWithClientName=findIdWithName(wellName);
+        //TODO обработать -1
+
+        //Создание ун. имени и запись в в базу
+        for (int i = 0; i < countClientEquipment; i++) {
+
+            //Генерируем имя.
+            String nameUnique =NameForEquipment.createName(countAllEquipment);
+            //Для уникального имени.
+            countAllEquipment++;
+            //Создаём оборудование.
+            doNewEquipment(idWellWithClientName,nameUnique);
+        }
+    }
+
+    //ВТорой выбор, для подсчёта количества оборудования на скважине wellName
+    public void countEquipment(String wellName) {
+        String sql = "SELECT count() FROM equipment JOIN well w on w.id = equipment.well_id WHERE w.name=(?);";
+        //Работа с бд
+        try {
+            PreparedStatement statement = connection.prepareStatement(sql);
+            statement.setString(1, wellName);
+            System.out.println("Кол-во оборудования на скважине " + wellName + ": " + statement.executeQuery().getInt(1));
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    //подсчёт всего оборудования, для уникального имени
+    private void numCountAllEquipment() {
+        try {
+            this.countAllEquipment = this.connection.createStatement().executeQuery("SELECT count() FROM equipment").getInt(1);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    //Добавление новых оборудованием.
+    private void doNewEquipment(int wellId,String equipmentName){
+        String sqlForAddEquipment = "INSERT INTO equipment  VALUES (null,(?),(?))";
+        try {
+            PreparedStatement statement = connection.prepareStatement(sqlForAddEquipment);
+            statement.setString(1, equipmentName);
+            statement.setInt(2, wellId);
+            statement.executeUpdate();
+            //Выполняете сам запрос в базу.
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    //Поиск Id скважины по её имени, для добавления новых оборудований к этой скважине.
+    private int findIdWithName(String wellName){
+
+        String sqlForNameWell = "SELECT id FROM well Where name =(?);";
+        try {
+            PreparedStatement statement = connection.prepareStatement(sqlForNameWell);
+            statement.setString(1, wellName);
+            return statement.executeQuery().getInt(1);
+            //Выполняете сам запрос в базу.
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return -1;
     }
 }
