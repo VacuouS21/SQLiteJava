@@ -37,7 +37,6 @@ public class EquipmentService {
     //Создание n оборудования для скважины wellName
     public void createEquipment(String wellName, int countClientEquipment) {
 
-        //TODO Проверка на существование такой скважины
         try {
             //Создаём well с заданным wellName, если такой ещё нет
             if(!ForCheckWellWithName.isForCheckWell(wellName,connection).getBoolean(1)) {
@@ -51,19 +50,23 @@ public class EquipmentService {
         //Получение общего количества оборудования, для уникального имени.
         numCountAllEquipment();
 
-        //Нахождение id скважины поеё имени, для дальнейшей записи в well_id у equipment
+        //Нахождение id скважины по её имени, для дальнейшей записи в well_id у equipment
         int idWellWithClientName=findIdWithName(wellName);
-        //TODO обработать -1
 
-        //Создание ун. имени и запись в в базу
-        for (int i = 0; i < countClientEquipment; i++) {
+        if(idWellWithClientName==-1){
+            System.out.println("Такая скважина отсутсвует");
+        }
+       else {
+            //Создание ун. имени и запись в в базу
+            for (int i = 0; i < countClientEquipment; i++) {
 
-            //Генерируем имя.
-            String nameUnique =NameForEquipment.createName(countAllEquipment);
-            //Для уникального имени.
-            countAllEquipment++;
-            //Создаём оборудование.
-            doNewEquipment(idWellWithClientName,nameUnique);
+                //Генерируем имя.
+                String nameUnique = NameForEquipment.createName(countAllEquipment);
+                //Для уникального имени.
+                countAllEquipment++;
+                //Создаём оборудование.
+                doNewEquipment(idWellWithClientName, nameUnique);
+            }
         }
     }
 
@@ -102,7 +105,6 @@ public class EquipmentService {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-
     }
 
     //Поиск Id скважины по её имени, для добавления новых оборудований к этой скважине.

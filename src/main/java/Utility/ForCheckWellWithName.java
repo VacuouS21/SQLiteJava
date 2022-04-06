@@ -25,7 +25,6 @@ public class ForCheckWellWithName {
             PreparedStatement statement = connection.prepareStatement(newWell);
             statement.setString(1, wellName);
             statement.executeUpdate();
-            //Выполняете сам запрос в базу.
         } catch (SQLException e) {
             e.printStackTrace();
         }

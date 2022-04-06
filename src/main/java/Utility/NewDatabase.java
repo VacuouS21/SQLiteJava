@@ -1,4 +1,5 @@
 package Utility;
+
 import org.sqlite.JDBC;
 
 import java.sql.Connection;
@@ -8,27 +9,31 @@ import java.sql.Statement;
 
 public class NewDatabase {
     private static Connection connection;
-    public static void createDatabase(String pass){
+
+    public static void createDatabase(String pass) {
 
         try {
-
+            connection = null;
+            Class.forName("org.sqlite.JDBC");
             DriverManager.registerDriver(new JDBC());
             // Выполняем подключение к базе данных
             connection = DriverManager.getConnection(pass);
             Statement statmt = connection.createStatement();
             statmt.execute(
-                    "PRAGMA foreign_keys=on;\n" +
-                            "CREATE TABLE well( \n" +
-                            "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,\n" +
-                            "name VARCHAR(32) NOT NULL\n" +
-                            ");+"+
-                            "CREATE TABLE equipment(\n" +
-                            "  id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, \n" +
-                            "name VARCHAR(32) NOT NULL,\n" +
-                            "  well_id INTEGER NOT NULL,\n" +
-                            "  FOREIGN KEY(well_id) REFERENCES well(id)\n" +
-                            ");\n");
+
+                    "CREATE TABLE IF NOT EXISTS well(" +
+                            "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL," +
+                            "name VARCHAR(32) NOT NULL)" );
+            statmt.execute("CREATE TABLE IF NOT EXISTS equipment(" +
+                    "  id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
+                    "name VARCHAR(32) NOT NULL," +
+                    "  well_id INTEGER NOT NULL," +
+                    "  FOREIGN KEY(well_id) REFERENCES well(id))");
+
+
         } catch (SQLException e) {
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
             e.printStackTrace();
         }
 

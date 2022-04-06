@@ -2,17 +2,17 @@ package Utility;
 
 import java.io.File;
 
-public class NewFileBD {
-    public static void createFile(){
+public class NewFile {
+    public static void createFile(String fileName){
         try {
             // Возьмите файл
-            File f = new File("well.db");
+            File f = new File(fileName);
             //Создайте новый файл
             // Убедитесь, что он не существует
             if (f.createNewFile())
-                System.out.println("File created");
+                System.out.println("Файл создан");
             else
-                System.out.println("File already exists");
+                System.out.println("Файл существует");
         }
         catch (Exception e) {
             System.err.println(e);
